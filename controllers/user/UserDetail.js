@@ -1,4 +1,6 @@
 import User from '../../models/User.js';
+import CompSubmission from '../../models/CompSubmission.js';
+import Competition from '../../models/Comp.js';
 
 // GET controller for retrieving myJoinComp
 async function getMyJoinComp(request, response) {
@@ -66,10 +68,37 @@ async function addToMyJoinComp(request, response) {
   }
 }
 
+// GET controller for retrieving user stats (joined, created, totalPoints)
+async function getUserStats(request, response) {
+  const { userId } = request.params;
+  try {
+    const user = await User.findById(userId);
+    if (!user) return response.status(404).json({ message: 'User not found' });
+
+    // competitionsJoined and competitionsCreated from user arrays
+    const competitionsJoined = Array.isArray(user.myJoinComp) ? user.myJoinComp.length : 0;
+    const competitionsCreated = Array.isArray(user.myCreatedComp) ? user.myCreatedComp.length : 0;
+
+    // totalPoints: sum points from CompSubmission for this user
+    const submissions = await CompSubmission.find({ userId });
+    const totalPoints = submissions.reduce((sum, s) => sum + (s.points || 0), 0);
+
+    return response.status(200).json({
+      competitionsJoined,
+      competitionsCreated,
+      totalPoints,
+    });
+  } catch (error) {
+    console.error('Error fetching user stats:', error);
+    return response.status(500).json({ message: 'Internal server error' });
+  }
+}
+
 // Exporting the controllers
 export {
   getMyJoinComp,
   getMyCreatedComp,
   addToMyCreatedComp,
   addToMyJoinComp,
+  getUserStats,
 };
