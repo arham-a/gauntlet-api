@@ -1,7 +1,7 @@
 import express from 'express';
 import { authorizeBearerToken } from '../middlewares/jsonwebtoken.js';
 import register from '../controllers/auth/register.js';
-import { login, refreshLogin, getUserDetails } from '../controllers/auth/login.js';
+import { login, refreshLogin, getUserDetails, updateUser } from '../controllers/auth/login.js';
 
 // initialize router
 const router = express.Router();
@@ -33,5 +33,8 @@ router.get('/refresh', authorizeBearerToken, refreshLogin);
  * @access  Private
  */
 router.get('/user/:uid', getUserDetails);
+
+// Update user profile
+router.patch('/user/:uid', updateUser);
 
 export default router;

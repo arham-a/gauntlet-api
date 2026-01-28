@@ -133,3 +133,35 @@ async function getUserDetails(request, response) {
 }
 
 export { login, refreshLogin , getUserDetails };
+
+// Update user profile
+async function updateUser(request, response) {
+  try {
+    const { uid } = request.params;
+    const { username, email } = request.body;
+
+    const update = {};
+    if (username) update.username = username;
+    if (email) update.email = email;
+
+    // Check for uniqueness if username/email provided
+    if (username) {
+      const existing = await UserModel.findOne({ username, _id: { $ne: uid } });
+      if (existing) return response.status(400).json({ error: 'UsernameTaken', message: 'Username already in use' });
+    }
+    if (email) {
+      const existing = await UserModel.findOne({ email, _id: { $ne: uid } });
+      if (existing) return response.status(400).json({ error: 'EmailTaken', message: 'Email already in use' });
+    }
+
+    const updated = await UserModel.findByIdAndUpdate(uid, update, { new: true }).select('-password');
+    if (!updated) return response.status(404).json({ error: 'UserNotFound', message: 'User not found' });
+
+    return response.status(200).json({ message: 'Profile updated', data: updated });
+  } catch (error) {
+    console.error('Error updating user:', error);
+    return response.status(500).json({ error: 'InternalServerError', message: 'Could not update profile' });
+  }
+}
+
+export { updateUser };
