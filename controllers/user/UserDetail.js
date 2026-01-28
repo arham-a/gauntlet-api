@@ -41,9 +41,13 @@ async function addToMyCreatedComp(request, response) {
     if (!user) {
       return response.status(404).json({ message: 'User not found' });
     }
+    // Check if already in array to prevent duplicates
+    if (user.myCreatedComp.includes(compId)) {
+      return response.status(200).json({ message: 'Competition already in myCreatedComp', myCreatedComp: user.myCreatedComp });
+    }
     user.myCreatedComp.push(compId);
     await user.save();
-    return response.status(200).json({ message: 'Company added to myCreatedComp', myCreatedComp: user.myCreatedComp });
+    return response.status(200).json({ message: 'Competition added to myCreatedComp', myCreatedComp: user.myCreatedComp });
   } catch (error) {
     console.error('Error adding to myCreatedComp:', error);
     return response.status(500).json({ message: 'Internal server error' });
@@ -59,9 +63,13 @@ async function addToMyJoinComp(request, response) {
     if (!user) {
       return response.status(404).json({ message: 'User not found' });
     }
+    // Check if already in array to prevent duplicates
+    if (user.myJoinComp.includes(compId)) {
+      return response.status(200).json({ message: 'Competition already in myJoinComp', myJoinComp: user.myJoinComp });
+    }
     user.myJoinComp.push(compId);
     await user.save();
-    return response.status(200).json({ message: 'Company added to myJoinComp', myJoinComp: user.myJoinComp });
+    return response.status(200).json({ message: 'Competition added to myJoinComp', myJoinComp: user.myJoinComp });
   } catch (error) {
     console.error('Error adding to myJoinComp:', error);
     return response.status(500).json({ message: 'Internal server error' });

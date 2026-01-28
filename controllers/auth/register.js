@@ -30,12 +30,27 @@ const registerSchema = joi.object({
 
 async function register(request, response) {
   try {
+    console.log('Registration request body:', request.body);
+    
     // Validate request body
     const validatedData = await registerSchema.validateAsync(request.body, { abortEarly: false });
     
-    // Check if user already exists
-    const existingUser = await User.findOne({ username: validatedData.username });
-    if (existingUser) {
+    console.log('Validation passed:', validatedData);
+    
+    // Check if user already exists by username
+    const existingUserByUsername = await User.findOne({ username: validatedData.username });
+    if (existingUserByUsername) {
+      console.log('Duplicate username found:', validatedData.username);
+      return response.status(400).json({
+        error: 'DuplicateUsername',
+        message: 'An account already exists with this username'
+      });
+    }
+    
+    // Check if user already exists by email
+    const existingUserByEmail = await User.findOne({ email: validatedData.email });
+    if (existingUserByEmail) {
+      console.log('Duplicate email found:', validatedData.email);
       return response.status(400).json({
         error: 'DuplicateEmail',
         message: 'An account already exists with this email address'
@@ -75,8 +90,11 @@ async function register(request, response) {
     });
 
   } catch (error) {
+    console.error('Registration error details:', error);
+    
     // Handle validation errors
     if (error.isJoi) {
+      console.log('Joi validation error:', error.details);
       return response.status(400).json({
         error: 'ValidationError',
         message: error.details.map(detail => detail.message)
@@ -84,7 +102,7 @@ async function register(request, response) {
     }
 
     // Log unexpected errors
-    console.error('Registration error:', error);
+    console.error('Unexpected registration error:', error);
     
     // Handle other errors
     return response.status(500).json({
