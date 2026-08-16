@@ -9,7 +9,7 @@ import compRoutes from './routes/competitions.js'
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/ai-resume-analyzer";
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/gauntlet";
 
 // Middleware
 app.use(express.json());
@@ -33,7 +33,7 @@ mongoose.connection.on('disconnected', () => {
 
 // Basic Routes
 app.get("/", (req, res) => {
-  res.json({ message: "AI Resume Analyzer API Running" });
+  res.json({ message: "Gauntlet API Running" });
 });
 
 app.get("/healthz", (req, res) => {
