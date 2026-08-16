@@ -4,7 +4,7 @@ import Register from '../../models/Register.js';
 import User from '../../models/User.js';
 import { sendEmail } from '../../utils/sendEmail.js';
 import CompSubmission from '../../models/CompSubmission.js';
-import axios from 'axios';
+import { linkCreatedComp, linkJoinedComp } from '../user/UserDetail.js';
 
 // Get all competitions
 export const getAllCompetitions = async (req, res) => {
@@ -61,17 +61,12 @@ export const createCompetition = async (req, res) => {
       compSubmissionObjId: [], // Initialize empty array
     });
 
-    // Hit the /myJoinComp POST API with query parameters
+    // Record the competition on the owner's profile.
     try {
-      const response = await axios.post(`http://localhost:5000/user/${compOwnerUserId}/${competition._id}/myCreatedComp`, null, {
-      });
-
-      if (response.status !== 200) {
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Failed to add to myJoinComp' });
-      }
-    } catch (apiError) {
-      console.error('Error hitting /myJoinComp API:', apiError.response ? apiError.response.data : apiError.message);
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Failed to add to myJoinComp', details: apiError.message });
+      await linkCreatedComp(compOwnerUserId, competition._id);
+    } catch (linkError) {
+      console.error('Error adding to myCreatedComp:', linkError.message);
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Failed to add to myCreatedComp', details: linkError.message });
     }
 
     res.status(StatusCodes.CREATED).json({ competition });
@@ -100,26 +95,12 @@ export const addParticipant = async (req, res) => {
     competition.participants.push(userId);
     await competition.save();
 
-    // Hit the /myJoinComp POST API with query parameters
+    // Record the competition on the participant's profile.
+    // Non-critical: a failure here should not block the join itself.
     try {
-      const response = await axios.post(
-        `http://localhost:5000/user/${userId}/${competitionId}/myJoinComp`,
-        {}, // empty request body
-        {
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          timeout: 5000 // 5 second timeout
-        }
-      );
-
-      if (response.status !== 200) {
-        throw new Error(`Failed with status: ${response.status}`);
-      }
-    } catch (apiError) {
-      console.error('Error hitting /myJoinComp API:', apiError);
-      // Don't return error response - continue with the flow
-      // Just log the error since this is a non-critical operation
+      await linkJoinedComp(userId, competitionId);
+    } catch (linkError) {
+      console.error('Error adding to myJoinComp:', linkError.message);
     }
 
     res.status(StatusCodes.OK).json({ competition });
@@ -245,26 +226,12 @@ export const approveUser = async (req, res) => {
     if (!registration) {
       return res.status(StatusCodes.NOT_FOUND).json({ error: 'Registration not found' });
     }
-    // Hit the /myJoinComp POST API with query parameters
+    // Record the competition on the participant's profile.
+    // Non-critical: a failure here should not block the join itself.
     try {
-      const response = await axios.post(
-        `http://localhost:5000/user/${userId}/${competitionId}/myJoinComp`,
-        {}, // empty request body
-        {
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          timeout: 5000 // 5 second timeout
-        }
-      );
-
-      if (response.status !== 200) {
-        throw new Error(`Failed with status: ${response.status}`);
-      }
-    } catch (apiError) {
-      console.error('Error hitting /myJoinComp API:', apiError);
-      // Don't return error response - continue with the flow
-      // Just log the error since this is a non-critical operation
+      await linkJoinedComp(userId, competitionId);
+    } catch (linkError) {
+      console.error('Error adding to myJoinComp:', linkError.message);
     }
 
     // Get user email

@@ -2,6 +2,20 @@ import User from '../../models/User.js';
 import CompSubmission from '../../models/CompSubmission.js';
 import Competition from '../../models/Comp.js';
 
+// Internal helpers used by other controllers.
+//
+// These replace what used to be axios POSTs to `http://localhost:5000/...`,
+// which fail in any environment where the API is not reachable at that address
+// (Vercel, Docker, any deployed host). Talking to the database directly is also
+// faster and atomic: $addToSet handles the duplicate check in a single write.
+export async function linkCreatedComp(userId, compId) {
+  await User.updateOne({ _id: userId }, { $addToSet: { myCreatedComp: String(compId) } });
+}
+
+export async function linkJoinedComp(userId, compId) {
+  await User.updateOne({ _id: userId }, { $addToSet: { myJoinComp: String(compId) } });
+}
+
 // GET controller for retrieving myJoinComp
 async function getMyJoinComp(request, response) {
   const { userId } = request.params; // Assuming user ID is available in request
