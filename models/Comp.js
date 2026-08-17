@@ -15,11 +15,17 @@ const instance = new mongoose.Schema(
       type: String,
       required: true,
     },
-    compType: { 
+    compType: {
       type: String,
       required: true,
     },
-    isPrivate: { 
+    // When entry and submission close. Null means the organiser has not set one,
+    // which the UI surfaces as "No deadline" rather than inventing a countdown.
+    deadline: {
+      type: Date,
+      default: null,
+    },
+    isPrivate: {
       type: Boolean,
       required: true,
     },

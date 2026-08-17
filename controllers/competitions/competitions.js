@@ -10,10 +10,10 @@ import { linkCreatedComp, linkJoinedComp } from '../user/UserDetail.js';
 export const getAllCompetitions = async (req, res) => {
   try {
     const competitions = await Competition.find()
-      .populate('compType', 'name description')
-      .select('compName compDescription participants isPrivate price')
+      .select('compName compDescription compType participants isPrivate price deadline compOwnerUserId createdAt')
+      .populate('compOwnerUserId', 'username')
       .lean();
-    
+
     const simplifiedCompetitions = competitions.map(comp => ({
       _id: comp._id,
       compName: comp.compName,
@@ -21,7 +21,10 @@ export const getAllCompetitions = async (req, res) => {
       compType: comp.compType,
       participantCount: comp.participants.length,
       isPrivate: comp.isPrivate,
-      price: comp.price
+      price: comp.price,
+      deadline: comp.deadline || null,
+      ownerUsername: comp.compOwnerUserId?.username || null,
+      createdAt: comp.createdAt || null,
     }));
     
     res.status(StatusCodes.OK).json({ competitions: simplifiedCompetitions });
@@ -38,6 +41,7 @@ export const createCompetition = async (req, res) => {
       compName,
       compDescription,
       compType,
+      deadline,
       isPrivate,
       passCode,
       problemStatement,
@@ -51,6 +55,7 @@ export const createCompetition = async (req, res) => {
       compName,
       compDescription,
       compType,
+      deadline: deadline || null,
       isPrivate,
       passCode,
       problemStatement,
@@ -162,10 +167,9 @@ export const getCompetitionById = async (req, res) => {
     
     const competition = await Competition.findById(competitionId)
       .populate('compOwnerUserId', 'username email')
-      .populate('compType', 'name description')
       .populate('participants', 'username email')
       .populate('compSubmissionObjId')
-      .select('compName compDescription isPrivate passCode problemStatement compRuleBook submissionRules totalPoints price announcements createdAt updatedAt');
+      .select('compName compDescription compType deadline compOwnerUserId participants isPrivate passCode problemStatement compRuleBook submissionRules totalPoints price announcements createdAt updatedAt');
 
     if (!competition) {
       return res.status(StatusCodes.NOT_FOUND).json({ error: 'Competition not found' });
